@@ -1,102 +1,106 @@
-# Blackjack — Joc de carti pentru consola (C++)
+# Blackjack — Console Card Game (C++)
 
-Joc de Blackjack pentru consola, scris in C++, cu clase proprii pentru fiecare
-concept al jocului (carte, pachet, lista inlantuita pentru o mana, jucator) si
-persistenta simpla a jucatorilor intre sesiuni.
+A console-based Blackjack game written in C++, with custom classes for each
+game concept (card, deck, linked list for a hand, player) and simple player
+persistence between sessions.
 
-## Screenshot-uri
+## Screenshots
 
-![Meniu principal](docs/screenshots/meniu.png)
-![O runda in desfasurare](docs/screenshots/runda.png)
-![Rezultatul unei runde](docs/screenshots/rezultat.png)
+![Main menu](docs/screenshots/meniu.png)
+![A round in progress](docs/screenshots/runda.png)
+![Round result](docs/screenshots/rezultat.png)
 
-## Functionalitati
+## Features
 
-- **Meniu principal**: jucator nou sau continuare cu un jucator deja salvat.
-- **Reguli standard de Blackjack**: Hit, Stand, Double (dublare pariu + o
-  singura carte suplimentara); asii valoreaza 1 sau 11, calculat automat
-  pentru scorul optim; dealerul trage automat cat timp scorul ii e sub 17.
-- **Determinare corecta a rezultatului**: bust, blackjack natural (push),
-  scor mai mare/egal/mai mic decat al dealerului.
-- **Reluare runda**: dupa fiecare runda poti continua cu acelasi jucator,
-  pastrandu-ti banii acumulati, fara sa repornesti aplicatia.
-- **Salvare/incarcare jucator**: numele si banii se salveaza automat la
-  iesire intr-un fisier text (`jucatori.txt`), si pot fi reincarcate la
-  urmatoarea sesiune.
-- **Scor afisat aliniat in dreapta ecranului**, pentru fiecare mana; cat timp
-  dealerul mai are o carte ascunsa, scorul lui e afisat ca "valoare+?".
-- **"Animatie" de impartire a cartilor**: cartile apar pe rand, cu o scurta
-  pauza intre ele, in loc sa apara toate deodata.
-- **Culori in consola**: cartile de Inima/Diamant apar cu rosu, mesajele de
-  rezultat sunt colorate (verde la castig, rosu la pierdere/bust, galben la
-  egalitate).
-- **Simboluri grafice pentru carti**: Trefla/Inima/Pica/Romb se afiseaza ca
-  simboluri Unicode (♣ ♥ ♠ ♦), nu ca litere (C/H/S/D).
+- **Main menu**: new player or continue with an already saved player.
+- **Standard Blackjack rules**: Hit, Stand, Double (double the bet + exactly
+  one additional card); aces count as 1 or 11, calculated automatically for
+  the optimal score; the dealer automatically draws while their score is
+  below 17.
+- **Correct outcome determination**: bust, natural blackjack (push), score
+  higher/equal/lower than the dealer's.
+- **Continue playing**: after each round you can keep playing with the same
+  player, keeping your accumulated money, without restarting the application.
+- **Save/load player**: the name and money are saved automatically on exit
+  to a text file (`jucatori.txt`), and can be reloaded in the next session.
+- **Score displayed right-aligned on screen**, for each hand; while the
+  dealer still has a hidden card, their score is shown as "value+?".
+- **Card-dealing "animation"**: cards appear one at a time, with a short
+  pause between them, instead of all appearing at once.
+- **Console colors**: Hearts/Diamonds cards are shown in red, and result
+  messages are colored (green for a win, red for a loss/bust, yellow for a
+  tie).
+- **Graphical card symbols**: Clubs/Hearts/Spades/Diamonds are displayed as
+  Unicode symbols (♣ ♥ ♠ ♦), not as letters (C/H/S/D).
 
-## Stack tehnic
+## Tech stack
 
-- C++17, fara dependinte externe — doar biblioteca standard
+- C++17, no external dependencies — standard library only
   (`<iostream>`, `<fstream>`, `<random>`, `<thread>`, `<chrono>`, `<map>`)
-- Proiect Visual Studio 2022 (`.sln` / `.vcxproj`), platformă x64/Win32
-- Clase proprii pentru fiecare concept: `Carte`, `Lista` (lista inlantuita
-  scrisa manual, folosita pentru mana fiecarui jucator), `Pachet`, `Jucator`
-- Amestecarea pachetului: `std::mt19937` + `std::random_device`
-- Persistenta jucatorilor: fisier text simplu, citit/scris cu `std::fstream`
-  si `std::map` pentru cautare dupa nume
-- Pauzele dintre carti: `std::this_thread::sleep_for`
-- Culori in consola: Windows Console API (`SetConsoleTextAttribute`)
+- Visual Studio 2022 project (`.sln` / `.vcxproj`), x64/Win32 platform
+- Custom classes for each concept: `Carte` (Card), `Lista` (List — a hand-
+  written linked list used for each player's hand), `Pachet` (Deck),
+  `Jucator` (Player)
+- Deck shuffling: `std::mt19937` + `std::random_device`
+- Player persistence: plain text file, read/written with `std::fstream` and
+  `std::map` for lookup by name
+- Pauses between cards: `std::this_thread::sleep_for`
+- Console colors: Windows Console API (`SetConsoleTextAttribute`)
 
-## Rulare locala
+## Running locally
 
-1. Deschide `Blackjack.sln` in Visual Studio 2022.
-2. Daca la build apare o eroare legata de toolset-ul **v143**, instaleaza
-   componenta lipsa din Visual Studio Installer:
+1. Open `Blackjack.sln` in Visual Studio 2022.
+2. If a build error related to the **v143** toolset appears, install the
+   missing component from the Visual Studio Installer:
    Modify → Individual components → **MSVC v143 - VS 2022 C++ x64/x86
    build tools**.
-3. Build & Run (F5). Jocul porneste direct in consola.
+3. Build & Run (F5). The game starts directly in the console.
 
-Fisierul de salvare `jucatori.txt` se creeaza automat, langa executabil, la
-prima salvare a unui jucator — nu trebuie creat manual.
+The save file `jucatori.txt` is created automatically, next to the
+executable, the first time a player is saved — it doesn't need to be
+created manually.
 
-## Decizii tehnice de retinut
+## Technical decisions worth noting
 
-- Clasa `Jucator` implementeaza corect Rule of Three (constructor de copiere
-  + `operator=`), pentru ca aloca memorie dinamic pentru nume (`new char[]`)
-  si contine un obiect `Lista` cu propria alocare — copierea unui `Jucator`
-  (de exemplu la incarcarea unui jucator salvat) e sigura, fara double-free.
-- Amestecarea pachetului foloseste un generator `std::mt19937` seed-uit o
-  singura data din `std::random_device`, nu `rand()`/`srand(time(0))` — un
-  seed bazat pe timp cu rezolutie de 1 secunda ar produce acelasi amestec
-  daca jocul e pornit de mai multe ori in aceeasi secunda.
-- Persistenta jucatorilor e un fisier text necriptat, suficient pentru un
-  proiect de acest tip, dar nepotrivit pentru date sensibile intr-un
-  context real.
-- **Split nu e implementat**: ar necesita ca `Jucator` sa poata detine mai
-  multe maini simultan (in loc de o singura `Lista carti` + un singur
-  `suma_pariata`), plus adaptarea buclei de joc din `Joc.cpp` sa itereze
-  peste mainile active — o restructurare punctuala, nu doar completarea
-  unei functii goale.
-- **Simbolurile cartilor (♣ ♥ ♠ ♦) sunt Unicode, scrise ca octeti UTF-8**
-  direct in cod (`\xE2\x99\xA3` etc.), nu ca litere din codepagina OEM —
-  merg corect in orice consola (cmd clasic, Windows Terminal), indiferent
-  de fontul folosit. Codepagina de iesire a consolei e setata explicit pe
-  UTF-8 (`SetConsoleOutputCP(CP_UTF8)`) in `Source.cpp`. Deoarece un simbol
-  UTF-8 ocupa 3 octeti dar un singur caracter afisat, alinierea pe coloane
-  a mainilor din `Joc.cpp` numara caractere Unicode, nu octeti brut
-  (functia `lungimeUtf8`), altfel padding-ul ar fi iesit gresit.
+- The `Jucator` class correctly implements the Rule of Three (copy
+  constructor + `operator=`), because it dynamically allocates memory for
+  the name (`new char[]`) and contains a `Lista` object with its own
+  allocation — copying a `Jucator` (for example, when loading a saved
+  player) is safe, with no double-free.
+- Deck shuffling uses an `std::mt19937` generator seeded once from
+  `std::random_device`, not `rand()`/`srand(time(0))` — a time-based seed
+  with 1-second resolution would produce the same shuffle if the game were
+  started multiple times within the same second.
+- Player persistence is an unencrypted text file, sufficient for a project
+  of this kind, but not suitable for sensitive data in a real-world
+  context.
+- **Split is not implemented**: it would require `Jucator` to be able to
+  hold multiple hands at once (instead of a single `Lista carti` + a single
+  `suma_pariata`), plus adapting the game loop in `Joc.cpp` to iterate over
+  the active hands — a targeted restructuring, not just filling in an
+  empty function.
+- **Card symbols (♣ ♥ ♠ ♦) are Unicode, written as raw UTF-8 bytes**
+  directly in the code (`\xE2\x99\xA3` etc.), not as OEM codepage letters —
+  they display correctly in any console (classic cmd, Windows Terminal),
+  regardless of the font used. The console's output codepage is explicitly
+  set to UTF-8 (`SetConsoleOutputCP(CP_UTF8)`) in `Source.cpp`. Because a
+  UTF-8 symbol takes up 3 bytes but displays as a single character, the
+  column alignment of hands in `Joc.cpp` counts Unicode characters, not raw
+  bytes (the `lungimeUtf8` function), otherwise the padding would come out
+  wrong.
 
-## Structura proiectului
+## Project structure
 
 ```
 Blackjack/
-  Blackjack.sln                 -> solutia Visual Studio
+  Blackjack.sln                 -> Visual Studio solution
   Blackjack/
     Source.cpp                  -> main() -> meniuPrincipal()
-    Joc.h / Joc.cpp              -> meniu, bucla de joc, regulile unei runde
-    Jucator.h / Jucator.cpp      -> clasa Jucator (bani, mana, scor, actiuni)
-    Carte.h / Carte.cpp          -> clasa Carte (valoare + simbol)
-    Lista.h / Lista.cpp          -> lista inlantuita, folosita pentru mana
-    Pachet.h / Pachet.cpp        -> pachetul de 52 de carti + amestecare
-    Salvare.h / Salvare.cpp      -> salvare/incarcare jucatori (jucatori.txt)
-    Blackjack.vcxproj(.filters) -> configurarea proiectului Visual Studio
+    Joc.h / Joc.cpp              -> menu, game loop, round rules
+    Jucator.h / Jucator.cpp      -> Jucator class (money, hand, score, actions)
+    Carte.h / Carte.cpp          -> Carte class (value + symbol)
+    Lista.h / Lista.cpp          -> linked list, used for the hand
+    Pachet.h / Pachet.cpp        -> the 52-card deck + shuffling
+    Salvare.h / Salvare.cpp      -> player save/load (jucatori.txt)
+    Blackjack.vcxproj(.filters) -> Visual Studio project configuration
 ```
