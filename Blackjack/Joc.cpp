@@ -11,6 +11,9 @@
 #include <limits>
 
 #ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #endif
 
@@ -44,7 +47,7 @@ static void ignoraRestulLiniei()
 {
 	if (!cin)
 		return;
-	cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
 }
 
 // Wait for Enter; return immediately on EOF so scripted runs do not hang.
