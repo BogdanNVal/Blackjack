@@ -1,4 +1,4 @@
 {
   "name": "Blackjack (C++)",
-  "install": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ && cmake --build build --parallel"
+  "install": "cmake -S /agent/repos/blackjack -B /agent/repos/blackjack/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ && cmake --build /agent/repos/blackjack/build --parallel"
 }
