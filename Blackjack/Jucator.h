@@ -1,5 +1,4 @@
 #pragma once
-#include "Pachet.h"
 #include "Lista.h"
 #pragma warning(disable:4996)
 
@@ -31,10 +30,9 @@ public:
 	int getScor();
 	void setScor(int a);
 
-	void Stand();
-	void Hit();
-	void Double(int a);
-	int Alegere();
+	void primeste(Carte c);
+	bool dubleazaMiza();
+
 	void verifica_carti();
 
 	friend std::ostream& operator<<(std::ostream& out, const Jucator&);

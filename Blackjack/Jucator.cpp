@@ -1,9 +1,9 @@
 #include "Jucator.h"
+#include "Reguli.h"
 #include <cstring>
 #include <iomanip>
 
 using std::cout;
-using std::cin;
 using std::endl;
 
 Jucator::Jucator(const char* nume,int banii,int suma_pariata) {
@@ -110,87 +110,26 @@ void Jucator::Bet(int a)
 
 }
 
-void Jucator::Stand() {
-	
-	
-}
-void Jucator::Hit(){
-	
-	carti.addElement(trage_carte());
+void Jucator::primeste(Carte c)
+{
+	carti.addElement(c);
 	verifica_carti();
-
 }
 
-void Jucator::Double(int a) {
-
-	if (a <= banii)
+bool Jucator::dubleazaMiza()
+{
+	if (suma_pariata <= banii)
 	{
-		banii -= a;
-		suma_pariata += a;
-		carti.addElement(trage_carte());
-		verifica_carti();
+		banii -= suma_pariata;
+		suma_pariata += suma_pariata;
+		return true;
 	}
-	else
-	{
-		cout << "Nu aveti suficienti bani pentru Double.\n";
-	}
-
-}
-
-int  Jucator::Alegere(){
-	
-	int nr;
-	cin >> nr;
-	
-	if (nr != 1 && nr != 2 && nr != 3)
-	{
-		cout << "Nu ati introdus o varianta corecta\n ";
-		cout << "[1] Hit, [2] Stand, [3] Double ";
-		while (nr != 1 && nr != 2 && nr != 3)
-		{
-			cin >> nr;
-
-		}
-	}
-	return nr;
-	
+	return false;
 }
 
 void Jucator::verifica_carti()
 {
-	Lista a = getCarti();
-	Nod* p = a.getFirst();
-	int s = 0, s1 = 0;
-	while (p)
-	{
-		Carte c(p->getInfo());
-		if (c.getValoare() == 1)
-			s1++;
-		else if (c.getValoare() > 10)
-			s = s + 10;
-		else
-			s = s + c.getValoare();
-		p = p->getNext();
-	}
-	while (s1 != 0)
-	{
-		if (s + 11 <= 21)
-		{
-			s = s + 11;
-			s1--;
-		}
-		else
-		{
-			s = s + s1;
-			s1 = 0;
-		}
-		
-	}
-		scor = s;
-	
-
-
-		
+	scor = calculeazaScor(carti);
 }
 
 std::ostream& operator<<(std::ostream& out, const Jucator& jucator) {
@@ -200,12 +139,14 @@ std::ostream& operator<<(std::ostream& out, const Jucator& jucator) {
 }
 
 std::istream& operator>>(std::istream& in, Jucator& jucator) {
-	char buffer[50];
-	in >> std::setw(50) >> buffer;
+	char buffer[50] = {};
+	if (!(in >> std::setw(50) >> buffer))
+		return in;
 
+	char* nou = new char[strlen(buffer) + 1];
+	strcpy(nou, buffer);
 	delete[] jucator.nume;
-	jucator.nume = new char[strlen(buffer) + 1];
-	strcpy(jucator.nume, buffer);
+	jucator.nume = nou;
 
 	return in;
 }

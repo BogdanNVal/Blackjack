@@ -2,43 +2,26 @@
 #include <stdexcept>
 #include <random>
 
-using std::cout;
-
-Carte Pachet[52];
-
-
-void afisare_pachet() {
-	for (int i = 0; i < 52; i++)
-		cout << "Cartea " << i + 1 << "= " << Pachet[i];
+Pachet::Pachet()
+{
+	creeaza();
 }
 
-void creare_pachet() {
-
-
-
+void Pachet::creeaza()
+{
 	for (int i = 0; i < 4; i++)
 	{
 		for (int j = 1; j <= 13; j++)
 		{
-			Pachet[13 * i + j - 1].setValoare(j);
-			Pachet[13 * i + j - 1].setSimbol(i);
-
-
+			carti[13 * i + j - 1].setValoare(j);
+			carti[13 * i + j - 1].setSimbol(i);
 		}
-
 	}
-	//afisare_pachet();
-	//cout << endl;
-
-
-
-
 }
 
-
-
-void amestecare_pachet()
+void Pachet::amesteca()
 {
+	// Seed once from random_device so two starts in the same second get different shuffles.
 	static std::random_device rd;
 	static std::mt19937 gen(rd());
 
@@ -47,24 +30,20 @@ void amestecare_pachet()
 		std::uniform_int_distribution<int> dist(i, 51);
 		int r = dist(gen);
 
-		Carte temp = Pachet[i];
-		Pachet[i] = Pachet[r];
-		Pachet[r] = temp;
+		Carte temp = carti[i];
+		carti[i] = carti[r];
+		carti[r] = temp;
 	}
-
-	//afisare_pachet();
-
 }
 
-
-Carte trage_carte() {
+Carte Pachet::trage()
+{
 	for (int i = 0; i < 52; i++)
 	{
-		if (Pachet[i].getValoare() != 0)
+		if (carti[i].getValoare() != 0)
 		{
-			Carte temp = Pachet[i];
-			Pachet[i].setValoare(0);
-
+			Carte temp = carti[i];
+			carti[i].setValoare(0);
 			return temp;
 		}
 	}
@@ -72,9 +51,10 @@ Carte trage_carte() {
 	throw std::runtime_error("Pachetul este gol, nu mai sunt carti de tras.");
 }
 
-bool pachet_gol() {
+bool Pachet::gol() const
+{
 	for (int i = 0; i < 52; i++)
-		if (Pachet[i].getValoare() != 0)
+		if (carti[i].getValoare() != 0)
 			return false;
 	return true;
 }

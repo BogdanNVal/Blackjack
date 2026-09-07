@@ -26,7 +26,6 @@ void Nod::setNext(Nod* next) {
 }
 
 
-/*clasa ListaStudenti*/
 Lista::Lista() {
 	primul = 0;
 }
@@ -91,6 +90,9 @@ std::ostream& operator<<(std::ostream& out, const Lista& list) {
 }
 
 Lista& Lista::operator=(const Lista& list) {
+	if (this == &list)
+		return *this;
+
 	clear();
 	Nod* p = list.primul;
 	while (p) {
@@ -99,4 +101,3 @@ Lista& Lista::operator=(const Lista& list) {
 	}
 	return *this;
 }
-

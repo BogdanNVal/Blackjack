@@ -10,8 +10,8 @@ class Carte
 public:
 	Carte(int valoare=0,int simbol=0);
 	Carte(const Carte&);
-	int getValoare();
-	int getSimbol();
+	int getValoare() const;
+	int getSimbol() const;
 	void setValoare(int valoare);
 	void setSimbol(int valoare);
 

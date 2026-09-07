@@ -1,0 +1,11 @@
+# Style matching the existing sources: tabs for indentation, Allman braces.
+Language: Cpp
+BasedOnStyle: LLVM
+UseTab: Always
+IndentWidth: 4
+TabWidth: 4
+BreakBeforeBraces: Allman
+ColumnLimit: 0
+AccessModifierOffset: -4
+PointerAlignment: Left
+SortIncludes: false

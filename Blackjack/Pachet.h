@@ -1,10 +1,15 @@
 #pragma once
-#include"Carte.h"
+#include "Carte.h"
 
+class Pachet
+{
+	Carte carti[52];
 
-void afisare_pachet();
-void creare_pachet();
-void amestecare_pachet();
-Carte trage_carte();
-bool pachet_gol();
+public:
+	Pachet();
 
+	void creeaza();
+	void amesteca();
+	Carte trage();
+	bool gol() const;
+};

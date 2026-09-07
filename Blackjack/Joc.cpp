@@ -1,12 +1,19 @@
 #include "Joc.h"
 #include "Salvare.h"
+#include "Reguli.h"
+#include "Strategie.h"
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <chrono>
 #include <functional>
+#include <limits>
 
 #ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #endif
 
@@ -16,21 +23,43 @@ using std::endl;
 using std::setw;
 using std::string;
 
-Jucator dealer("Dealer", 0);
-
 static const int LATIME_MANA = 45;
-static const int PAUZA_CARTE_MS = 600;   // pauza intre cartile date, pt. efect de "animatie"
+static const int PAUZA_CARTE_MS = 600;
 
-// Opreste executia pentru un scurt timp, ca sa dea senzatia ca dealerul
-// (sau jucatorul) trage cartile una cate una, nu toate deodata.
 static void asteapta(int ms)
 {
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
-// --- Culori consola (Windows) ---------------------------------------------
-// Pe alte sisteme (ex. testare pe Linux), functiile nu fac nimic vizibil,
-// dar codul tot compileaza si ruleaza normal.
+static void stergeEcran()
+{
+#ifdef _WIN32
+	system("cls");
+#else
+	cout << "\033[2J\033[H";
+	cout.flush();
+#endif
+}
+
+// Discard the leftover newline (and anything else) after `cin >> ...`
+// so a following getline actually waits for the user.
+static void ignoraRestulLiniei()
+{
+	if (!cin)
+		return;
+	cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+}
+
+// Wait for Enter; return immediately on EOF so scripted runs do not hang.
+static void asteaptaEnter()
+{
+	cout << "Apasa Enter pentru a continua...";
+	cout.flush();
+	cin.clear();
+	string linie;
+	std::getline(cin, linie);
+}
+
 #ifdef _WIN32
 static const int CULOARE_IMPLICITA = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
 static const int CULOARE_ROSU = FOREGROUND_RED | FOREGROUND_INTENSITY;
@@ -51,7 +80,6 @@ static void culoare(int cod)
 #endif
 }
 
-// Afiseaza un mesaj intr-o culoare, apoi revine la culoarea implicita.
 static void afiseazaColorat(const string& text, int cod)
 {
 	culoare(cod);
@@ -59,7 +87,6 @@ static void afiseazaColorat(const string& text, int cod)
 	culoare(CULOARE_IMPLICITA);
 }
 
-// O carte rosie (Inima/Diamant) se afiseaza cu rosu, restul cu culoarea implicita.
 static void afiseazaCarteColorata(Carte c)
 {
 	bool rosu = (c.getSimbol() == 1 || c.getSimbol() == 3);
@@ -68,7 +95,6 @@ static void afiseazaCarteColorata(Carte c)
 	culoare(CULOARE_IMPLICITA);
 }
 
-// Afiseaza toate cartile dintr-o mana, fiecare in culoarea ei.
 static void afiseazaManaColorata(Lista& carti)
 {
 	Nod* p = carti.getFirst();
@@ -78,9 +104,7 @@ static void afiseazaManaColorata(Lista& carti)
 		p = p->getNext();
 	}
 }
-// ----------------------------------------------------------------------------
 
-// Reda o mana (Lista de carti) ca string, ca sa poata fi aliniata pe ecran.
 static string cartiToString(Lista& carti)
 {
 	std::ostringstream oss;
@@ -88,8 +112,14 @@ static string cartiToString(Lista& carti)
 	return oss.str();
 }
 
-// Valoarea de Blackjack a unei singure carti vizibile (asul conteaza 11
-// cand e singura carte cunoscuta, fara riscul de a depasi 21).
+static int numarCarti(Lista& carti)
+{
+	int n = 0;
+	for (Nod* p = carti.getFirst(); p; p = p->getNext())
+		n++;
+	return n;
+}
+
 static int scorCartePartiala(Carte c)
 {
 	int v = c.getValoare();
@@ -98,23 +128,33 @@ static int scorCartePartiala(Carte c)
 	return v;
 }
 
-// Numara caracterele dintr-un string UTF-8 (nu octetii), ca sa ramana
-// corecta alinierea pe coloane cand textul contine simboluri Unicode
-// (trefla/inima/pica/romb), care ocupa mai multi octeti dar un singur
-// caracter afisat pe ecran.
+// Count Unicode characters, not bytes — suit symbols are multi-byte UTF-8.
 static int lungimeUtf8(const string& s)
 {
 	int n = 0;
 	for (unsigned char c : s)
-		if ((c & 0xC0) != 0x80) // sare peste octetii de continuare UTF-8
+		if ((c & 0xC0) != 0x80)
 			n++;
 	return n;
 }
 
-// Afiseaza o mana (eticheta + carti colorate) cu scorul aliniat in partea
-// dreapta. 'textPtruLungime' e versiunea simpla (necolorata) a cartilor,
-// folosita doar ca sa se calculeze corect padding-ul; 'printCarti' e ce
-// se afiseaza efectiv (poate fi colorat).
+// Option 3 (Double) only when allowed. On EOF return Stand so redirected input ends cleanly.
+static int citesteAlegere(bool permiteDouble)
+{
+	int nr;
+	while (cin >> nr)
+	{
+		ignoraRestulLiniei();
+		if (nr == 1 || nr == 2 || (nr == 3 && permiteDouble))
+			return nr;
+		if (permiteDouble)
+			cout << "Optiune invalida. [1] Hit, [2] Stand, [3] Double: ";
+		else
+			cout << "Optiune invalida. [1] Hit, [2] Stand: ";
+	}
+	return 2;
+}
+
 static void afiseazaMana(const string& eticheta, const string& textPtruLungime,
 	const std::function<void()>& printCarti, const string& scor)
 {
@@ -128,12 +168,7 @@ static void afiseazaMana(const string& eticheta, const string& textPtruLungime,
 	cout << "Scor: " << scor << endl;
 }
 
-// Afiseaza banii jucatorului si ambele maini (jucator + dealer).
-// Daca dealerVizibilComplet e false, a doua carte a dealerului ramane
-// ascunsa si se arata doar scorul partial calculat din cartea vizibila.
-// Functioneaza corect si in timpul animatiei de impartire, cand dealerul
-// inca nu are nicio carte sau are doar prima.
-static void afiseazaStare(Jucator& jucator, bool dealerVizibilComplet)
+static void afiseazaStare(Jucator& jucator, bool dealerVizibilComplet, Jucator& dealer)
 {
 	cout << "Banii: " << jucator.getBanii() << endl << endl;
 
@@ -151,12 +186,10 @@ static void afiseazaStare(Jucator& jucator, bool dealerVizibilComplet)
 	}
 	else if (!p)
 	{
-		// dealerul inca nu a primit nicio carte (animatie de impartire in curs)
 		afiseazaMana("Dealer: ", "", []() {}, "-");
 	}
 	else if (!p->getNext())
 	{
-		// dealerul are doar prima carte (vizibila); a doua nu a fost inca data
 		std::ostringstream carti;
 		carti << p->getInfo();
 		Carte prima = p->getInfo();
@@ -188,19 +221,21 @@ void meniuPrincipal()
 		cout << "[2] Continua cu un jucator existent\n";
 		cout << "[3] Iesire\n";
 		cout << "Alegere: ";
-		cin >> alegere;
+		if (!(cin >> alegere)) return;
+		ignoraRestulLiniei();
 	} while (alegere != 1 && alegere != 2 && alegere != 3);
 
-	system("CLS");
+	stergeEcran();
 
 	if (alegere == 1)
 	{
 		char nume[50];
 		cout << "Nume jucator nou: ";
-		cin >> setw(50) >> nume;
+		if (!(cin >> setw(50) >> nume)) return;
+		ignoraRestulLiniei();
 
 		Jucator jucator(nume);
-		system("CLS");
+		stergeEcran();
 		ruleazaJoc(jucator);
 	}
 	else if (alegere == 2)
@@ -208,8 +243,8 @@ void meniuPrincipal()
 		if (!existaJucatoriSalvati())
 		{
 			cout << "Nu exista niciun jucator salvat inca.\n\n";
-			system("pause");
-			system("CLS");
+			asteaptaEnter();
+			stergeEcran();
 			meniuPrincipal();
 			return;
 		}
@@ -217,27 +252,30 @@ void meniuPrincipal()
 		afiseazaJucatoriSalvati();
 		char nume[50];
 		cout << "\nNume jucator: ";
-		cin >> setw(50) >> nume;
+		if (!(cin >> setw(50) >> nume)) return;
+		ignoraRestulLiniei();
 
 		Jucator jucator;
 		if (incarcaJucator(nume, jucator))
 		{
-			system("CLS");
+			stergeEcran();
 			ruleazaJoc(jucator);
 		}
 		else
 		{
 			cout << "\nNu am gasit un jucator cu acest nume.\n\n";
-			system("pause");
-			system("CLS");
+			asteaptaEnter();
+			stergeEcran();
 			meniuPrincipal();
 		}
 	}
-	// alegere == 3: iesire, main() se termina
 }
 
 void ruleazaJoc(Jucator& jucator)
 {
+	Pachet pachet;
+	Jucator dealer("Dealer", 0);
+
 	bool continua = true;
 
 	while (continua)
@@ -253,14 +291,15 @@ void ruleazaJoc(Jucator& jucator)
 		jucator.setScor(0);
 		dealer.setScor(0);
 
-		start(jucator);
+		start(jucator, pachet, dealer);
 
 		cout << "\nBanii tai: " << jucator.getBanii() << "\n";
 		cout << "Mai joci o runda? [1] Da, [2] Nu: ";
 		int r;
-		cin >> r;
+		if (!(cin >> r)) break;
+		ignoraRestulLiniei();
 		continua = (r == 1);
-		system("CLS");
+		stergeEcran();
 	}
 
 	salveazaJucator(jucator);
@@ -268,165 +307,200 @@ void ruleazaJoc(Jucator& jucator)
 	cout << "La revedere!\n";
 }
 
-void start(Jucator& jucator)
+void start(Jucator& jucator, Pachet& pachet, Jucator& dealer)
 {
-	
-	creare_pachet();
-	amestecare_pachet();
+	pachet.creeaza();
+	pachet.amesteca();
 	cout << jucator;
 	cout << endl; cout << endl;
 	cout << "Ce suma doriti sa pariati: ";
 	int s;
-	cin >> s;
+	if (!(cin >> s)) return;
+	ignoraRestulLiniei();
 	while (s <= 0 || s > jucator.getBanii())
 	{
 		cout << "Suma invalida. Alege alta suma: ";
-		cin >> s;
+		if (!(cin >> s)) return;
+		ignoraRestulLiniei();
 	}
 	jucator.Bet(s);
-	system("CLS");
+	stergeEcran();
 
-	// Se trag cartile pe rand (jucator, dealer, jucator, dealer), cu o mica
-	// pauza dupa fiecare, ca sa para ca sunt date una cate una, nu instant.
-	jucator.getCarti().addElement(trage_carte());
-	jucator.verifica_carti();
-	system("CLS");
-	afiseazaStare(jucator, false);
+	jucator.primeste(pachet.trage());
+	stergeEcran();
+	afiseazaStare(jucator, false, dealer);
 	asteapta(PAUZA_CARTE_MS);
 
-	dealer.getCarti().addElement(trage_carte());
-	dealer.verifica_carti();
-	system("CLS");
-	afiseazaStare(jucator, false);
+	dealer.primeste(pachet.trage());
+	stergeEcran();
+	afiseazaStare(jucator, false, dealer);
 	asteapta(PAUZA_CARTE_MS);
 
-	jucator.getCarti().addElement(trage_carte());
-	jucator.verifica_carti();
-	system("CLS");
-	afiseazaStare(jucator, false);
+	jucator.primeste(pachet.trage());
+	stergeEcran();
+	afiseazaStare(jucator, false, dealer);
 	asteapta(PAUZA_CARTE_MS);
 
-	dealer.getCarti().addElement(trage_carte());
-	dealer.verifica_carti();
-	system("CLS");
-	afiseazaStare(jucator, false);
+	dealer.primeste(pachet.trage());
+	stergeEcran();
+	afiseazaStare(jucator, false, dealer);
 
-	system("pause");
-	
-	verificare(jucator);
+	asteaptaEnter();
+
+	// Natural blackjack resolves immediately (player natural pays 3:2; both = push).
+	bool jucatorNatural = esteBlackjackNatural(jucator.getCarti());
+	bool dealerNatural = esteBlackjackNatural(dealer.getCarti());
+	if (jucatorNatural || dealerNatural)
+	{
+		stergeEcran();
+		afiseazaStare(jucator, true, dealer);
+		if (jucatorNatural && dealerNatural)
+		{
+			afiseazaColorat("Ambii aveti Blackjack. Push!\n", CULOARE_GALBEN);
+			draw(jucator);
+		}
+		else if (jucatorNatural)
+		{
+			afiseazaColorat("Blackjack! Platit 3:2!\n", CULOARE_VERDE);
+			winBlackjack(jucator);
+		}
+		else
+		{
+			afiseazaColorat("Dealerul are Blackjack. Ati pierdut.\n", CULOARE_ROSU);
+		}
+		return;
+	}
+
+	verificare(jucator, pachet, dealer);
 }
 
-void runda(Jucator& jucator)
-{   
-	system("CLS");
-	afiseazaStare(jucator, false);
+void runda(Jucator& jucator, Pachet& pachet, Jucator& dealer)
+{
+	stergeEcran();
+	afiseazaStare(jucator, false, dealer);
 
-	cout << "[1] Hit, [2] Stand, [3] Double\n ";
-	int a = jucator.Alegere();
-	alegere(jucator, a);
+	Carte cartaDealer = dealer.getCarti().getFirst()->getInfo();
+	bool poateDubla = (numarCarti(jucator.getCarti()) == 2) &&
+		(jucator.getSuma_pariata() <= jucator.getBanii());
+	Actiune sugestie = sfatBaza(jucator.getScor(),
+		esteManaSoft(jucator.getCarti()), cartaDealer, poateDubla);
+	cout << "Sugestie (strategie de baza): " << numeActiune(sugestie) << "\n";
+
+	if (poateDubla)
+		cout << "[1] Hit, [2] Stand, [3] Double\n ";
+	else
+		cout << "[1] Hit, [2] Stand\n ";
+	int a = citesteAlegere(poateDubla);
+	alegere(jucator, a, pachet, dealer);
 }
 
-void runda_dealer(Jucator& jucator)
+void runda_dealer(Jucator& jucator, Pachet& pachet, Jucator& dealer)
 {
 	if (jucator.getScor() > 21)
 	{
-		system("CLS");
-		afiseazaStare(jucator, true);
+		stergeEcran();
+		afiseazaStare(jucator, true, dealer);
 		afiseazaColorat("Ati pierdut (Bust)\n", CULOARE_ROSU);
 		return;
 	}
 
-	// Dealerul isi arata mai intai cartea ascunsa, cu o pauza scurta
-	system("CLS");
-	afiseazaStare(jucator, true);
+	stergeEcran();
+	afiseazaStare(jucator, true, dealer);
 	asteapta(PAUZA_CARTE_MS);
 
-	while(dealer.getScor()<17)
+	while (dealerTrebuieSaTraga(dealer.getScor()))
 	{
-		dealer.getCarti().addElement(trage_carte());
-		dealer.verifica_carti();
-		
-		system("CLS");
-		afiseazaStare(jucator, true);
+		dealer.primeste(pachet.trage());
+
+		stergeEcran();
+		afiseazaStare(jucator, true, dealer);
 		asteapta(PAUZA_CARTE_MS);
 	}
 
-	if (dealer.getScor() > 21)
+	switch (determinaRezultat(jucator.getScor(), dealer.getScor()))
 	{
+	case Rezultat::DealerBust:
 		afiseazaColorat("Dealer Bust! Ati castigat!\n", CULOARE_VERDE);
 		win(jucator);
-	}
-	else if (dealer.getScor() > jucator.getScor())
-	{
-		afiseazaColorat("Dealer castiga.\n", CULOARE_ROSU);
-	}
-	else if (dealer.getScor() < jucator.getScor())
-	{
+		break;
+	case Rezultat::JucatorCastiga:
 		afiseazaColorat("Ati castigat!\n", CULOARE_VERDE);
 		win(jucator);
+		break;
+	case Rezultat::DealerCastiga:
+		afiseazaColorat("Dealer castiga.\n", CULOARE_ROSU);
+		break;
+	case Rezultat::Egalitate:
+		afiseazaColorat("Push! (egalitate)\n", CULOARE_GALBEN);
+		draw(jucator);
+		break;
+	case Rezultat::JucatorBust:
+		afiseazaColorat("Ati pierdut (Bust)\n", CULOARE_ROSU);
+		break;
+	}
+}
+
+
+void verificare(Jucator& jucator, Pachet& pachet, Jucator& dealer)
+{
+	if (jucator.getScor() > 21)
+	{
+		runda_dealer(jucator, pachet, dealer);
+	}
+	else if (jucator.getScor() == 21)
+	{
+		afiseazaColorat("21!\n", CULOARE_VERDE);
+		runda_dealer(jucator, pachet, dealer);
 	}
 	else
 	{
-		afiseazaColorat("Push! (egalitate)\n", CULOARE_GALBEN);
-		draw(jucator);
+		runda(jucator, pachet, dealer);
 	}
-
 }
 
 
-void verificare(Jucator& jucator)
-{
-	
-	if (jucator.getScor() > 21)
-	{
-		afiseazaColorat("Bust\n", CULOARE_ROSU);
-		runda_dealer(jucator);
-	}
-	if (jucator.getScor() == 21)
-	{
-		afiseazaColorat("Blackjack\n", CULOARE_VERDE);
-		runda_dealer(jucator);
-	}
-	if (jucator.getScor() < 21)
-	{
-		runda(jucator);
-	}
-	
-
-}
-
-
-void alegere(Jucator& jucator,int nr)
+void alegere(Jucator& jucator, int nr, Pachet& pachet, Jucator& dealer)
 {
 	if (nr == 1)
 	{
-		jucator.Hit();
+		jucator.primeste(pachet.trage());
 		cout << "Trageti o carte...\n";
 		asteapta(PAUZA_CARTE_MS);
-		verificare(jucator);
+		verificare(jucator, pachet, dealer);
 	}
 	else if (nr == 2)
 	{
-		jucator.Stand();
-		runda_dealer(jucator);
+		runda_dealer(jucator, pachet, dealer);
 	}
 	else if (nr == 3)
 	{
-		jucator.Double(jucator.getSuma_pariata());
-		cout << "Trageti o carte...\n";
-		asteapta(PAUZA_CARTE_MS);
-		runda_dealer(jucator);
+		if (jucator.dubleazaMiza())
+		{
+			jucator.primeste(pachet.trage());
+			cout << "Trageti o carte...\n";
+			asteapta(PAUZA_CARTE_MS);
+			runda_dealer(jucator, pachet, dealer);
+		}
+		else
+		{
+			cout << "Nu aveti suficienti bani pentru Double.\n";
+			asteapta(PAUZA_CARTE_MS);
+			runda(jucator, pachet, dealer);
+		}
 	}
-
 }
 
 
 void win(Jucator& jucator)
 {
-
-	
 	jucator.setBanii(jucator.getBanii() + 2 * jucator.getSuma_pariata());
+}
 
+// Natural blackjack pays 3:2 (stake back + 1.5x, floored for odd bets).
+void winBlackjack(Jucator& jucator)
+{
+	int miza = jucator.getSuma_pariata();
+	jucator.setBanii(jucator.getBanii() + miza + (miza * 3) / 2);
 }
 
 void draw(Jucator& jucator)
