@@ -22,18 +22,14 @@ int calculeazaScor(Lista& mana)
 			s += valoareBlackjack(c);
 	}
 
-	while (asi != 0)
+	// Count aces as 1 first, then promote to 11 while the hand stays <= 21.
+	// (The old loop could promote one ace and then bust by adding the rest as 1s,
+	// e.g. A,A,10 -> 22 instead of 12.)
+	s += asi;
+	while (asi > 0 && s + 10 <= 21)
 	{
-		if (s + 11 <= 21)
-		{
-			s += 11;
-			asi--;
-		}
-		else
-		{
-			s += asi;
-			asi = 0;
-		}
+		s += 10;
+		asi--;
 	}
 
 	return s;
@@ -53,7 +49,8 @@ bool esteManaSoft(Lista& mana)
 			s += valoareBlackjack(c);
 	}
 
-	return asi > 0 && (s + asi - 1 + 11 <= 21);
+	// Soft = at least one ace can be counted as 11 in the optimal total.
+	return asi > 0 && (s + asi + 10 <= 21);
 }
 
 bool dealerTrebuieSaTraga(int scorDealer)

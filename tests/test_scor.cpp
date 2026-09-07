@@ -53,8 +53,29 @@ TEST_CASE("esteManaSoft detecteaza asul numarat ca 11", "[scor]")
 	Lista soft = mana({ 1, 6 }); // A,6 = soft 17
 	Lista hard = mana({ 10, 6 }); // 16 hard
 	Lista degradat = mana({ 1, 9, 13 }); // ace counts as 1 -> hard 20
+	Lista doiAsiZece = mana({ 1, 1, 10 }); // A,A,10 = hard 12
 
 	REQUIRE(esteManaSoft(soft) == true);
 	REQUIRE(esteManaSoft(hard) == false);
 	REQUIRE(esteManaSoft(degradat) == false);
+	REQUIRE(esteManaSoft(doiAsiZece) == false);
+}
+
+TEST_CASE("Doi asi + 10 = 12 (nu 22)", "[scor]")
+{
+	Lista l = mana({ 1, 1, 10 });
+	REQUIRE(calculeazaScor(l) == 12);
+	REQUIRE(esteManaSoft(l) == false);
+}
+
+TEST_CASE("Trei asi + 10 = 13", "[scor]")
+{
+	Lista l = mana({ 1, 1, 1, 10 });
+	REQUIRE(calculeazaScor(l) == 13);
+}
+
+TEST_CASE("Trei asi + 9 = 12", "[scor]")
+{
+	Lista l = mana({ 1, 1, 1, 9 });
+	REQUIRE(calculeazaScor(l) == 12);
 }

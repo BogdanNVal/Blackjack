@@ -139,12 +139,14 @@ std::ostream& operator<<(std::ostream& out, const Jucator& jucator) {
 }
 
 std::istream& operator>>(std::istream& in, Jucator& jucator) {
-	char buffer[50];
-	in >> std::setw(50) >> buffer;
+	char buffer[50] = {};
+	if (!(in >> std::setw(50) >> buffer))
+		return in;
 
+	char* nou = new char[strlen(buffer) + 1];
+	strcpy(nou, buffer);
 	delete[] jucator.nume;
-	jucator.nume = new char[strlen(buffer) + 1];
-	strcpy(jucator.nume, buffer);
+	jucator.nume = nou;
 
 	return in;
 }
