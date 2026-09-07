@@ -29,5 +29,10 @@ bool esteManaSoft(Lista& mana);
 // Dealerul mai trage cat timp scorul lui e sub 17.
 bool dealerTrebuieSaTraga(int scorDealer);
 
+// true daca mana e un "blackjack natural": exact doua carti care fac 21
+// (as + carte de 10). Se plateste 3:2, spre deosebire de un 21 obtinut din
+// trei sau mai multe carti.
+bool esteBlackjackNatural(Lista& mana);
+
 // Determina rezultatul comparand scorurile finale.
 Rezultat determinaRezultat(int scorJucator, int scorDealer);

@@ -145,17 +145,22 @@ static int lungimeUtf8(const string& s)
 	return n;
 }
 
-// Citeste alegerea jucatorului (1/2/3). La input invalid re-intreaba; la EOF
-// intoarce 2 (Stand), ca jocul sa se termine curat in loc sa intre in bucla
-// infinita cand input-ul redirectat s-a terminat.
-static int citesteAlegere()
+// Citeste alegerea jucatorului (1/2/3). Optiunea 3 (Double) e acceptata doar
+// cand 'permiteDouble' e true (adica jucatorul are exact doua carti si isi
+// permite miza). La input invalid re-intreaba; la EOF intoarce 2 (Stand), ca
+// jocul sa se termine curat in loc sa intre in bucla infinita cand input-ul
+// redirectat s-a terminat.
+static int citesteAlegere(bool permiteDouble)
 {
 	int nr;
 	while (cin >> nr)
 	{
-		if (nr == 1 || nr == 2 || nr == 3)
+		if (nr == 1 || nr == 2 || (nr == 3 && permiteDouble))
 			return nr;
-		cout << "Optiune invalida. [1] Hit, [2] Stand, [3] Double: ";
+		if (permiteDouble)
+			cout << "Optiune invalida. [1] Hit, [2] Stand, [3] Double: ";
+		else
+			cout << "Optiune invalida. [1] Hit, [2] Stand: ";
 	}
 	return 2;
 }
@@ -360,6 +365,32 @@ void start(Jucator& jucator, Pachet& pachet, Jucator& dealer)
 
 	asteaptaEnter();
 
+	// Blackjack natural (21 din primele doua carti): se rezolva imediat, fara
+	// tura jucatorului. Natural-ul jucatorului se plateste 3:2; daca ambii au
+	// natural e push, iar daca doar dealerul are natural jucatorul pierde miza.
+	bool jucatorNatural = esteBlackjackNatural(jucator.getCarti());
+	bool dealerNatural = esteBlackjackNatural(dealer.getCarti());
+	if (jucatorNatural || dealerNatural)
+	{
+		stergeEcran();
+		afiseazaStare(jucator, true, dealer);
+		if (jucatorNatural && dealerNatural)
+		{
+			afiseazaColorat("Ambii aveti Blackjack. Push!\n", CULOARE_GALBEN);
+			draw(jucator);
+		}
+		else if (jucatorNatural)
+		{
+			afiseazaColorat("Blackjack! Platit 3:2!\n", CULOARE_VERDE);
+			winBlackjack(jucator);
+		}
+		else
+		{
+			afiseazaColorat("Dealerul are Blackjack. Ati pierdut.\n", CULOARE_ROSU);
+		}
+		return;
+	}
+
 	verificare(jucator, pachet, dealer);
 }
 
@@ -376,8 +407,12 @@ void runda(Jucator& jucator, Pachet& pachet, Jucator& dealer)
 		esteManaSoft(jucator.getCarti()), cartaDealer, poateDubla);
 	cout << "Sugestie (strategie de baza): " << numeActiune(sugestie) << "\n";
 
-	cout << "[1] Hit, [2] Stand, [3] Double\n ";
-	int a = citesteAlegere();
+	// Double e permis doar pe primele doua carti (regula standard de cazino).
+	if (poateDubla)
+		cout << "[1] Hit, [2] Stand, [3] Double\n ";
+	else
+		cout << "[1] Hit, [2] Stand\n ";
+	int a = citesteAlegere(poateDubla);
 	alegere(jucator, a, pachet, dealer);
 }
 
@@ -438,7 +473,7 @@ void verificare(Jucator& jucator, Pachet& pachet, Jucator& dealer)
 	}
 	if (jucator.getScor() == 21)
 	{
-		afiseazaColorat("Blackjack\n", CULOARE_VERDE);
+		afiseazaColorat("21!\n", CULOARE_VERDE);
 		runda_dealer(jucator, pachet, dealer);
 	}
 	if (jucator.getScor() < 21)
@@ -483,6 +518,14 @@ void alegere(Jucator& jucator, int nr, Pachet& pachet, Jucator& dealer)
 void win(Jucator& jucator)
 {
 	jucator.setBanii(jucator.getBanii() + 2 * jucator.getSuma_pariata());
+}
+
+// Plata pentru un blackjack natural: 3:2. Jucatorul isi recupereaza miza plus
+// 1.5x din ea (rotunjit in jos pentru mize impare).
+void winBlackjack(Jucator& jucator)
+{
+	int miza = jucator.getSuma_pariata();
+	jucator.setBanii(jucator.getBanii() + miza + (miza * 3) / 2);
 }
 
 void draw(Jucator& jucator)

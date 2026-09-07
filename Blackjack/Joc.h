@@ -13,6 +13,7 @@ void runda_dealer(Jucator& jucator, Pachet& pachet, Jucator& dealer);
 void verificare(Jucator& jucator, Pachet& pachet, Jucator& dealer);
 
 void win(Jucator& jucator);
+void winBlackjack(Jucator& jucator);
 void draw(Jucator& jucator);
 
 void alegere(Jucator& jucator, int nr, Pachet& pachet, Jucator& dealer);

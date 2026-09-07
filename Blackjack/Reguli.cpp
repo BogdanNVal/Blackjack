@@ -63,6 +63,14 @@ bool dealerTrebuieSaTraga(int scorDealer)
 	return scorDealer < 17;
 }
 
+bool esteBlackjackNatural(Lista& mana)
+{
+	int n = 0;
+	for (Nod* p = mana.getFirst(); p; p = p->getNext())
+		n++;
+	return n == 2 && calculeazaScor(mana) == 21;
+}
+
 Rezultat determinaRezultat(int scorJucator, int scorDealer)
 {
 	if (scorJucator > 21) return Rezultat::JucatorBust;
