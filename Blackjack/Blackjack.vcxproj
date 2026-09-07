@@ -132,6 +132,8 @@
     <ClInclude Include="Jucator.h" />
     <ClInclude Include="Lista.h" />
     <ClInclude Include="Pachet.h" />
+    <ClInclude Include="Reguli.h" />
+    <ClInclude Include="Strategie.h" />
     <ClInclude Include="Salvare.h" />
   </ItemGroup>
   <ItemGroup>
@@ -141,6 +143,8 @@
     <ClCompile Include="Jucator.cpp" />
     <ClCompile Include="Carte.cpp" />
     <ClCompile Include="Lista.cpp" />
+    <ClCompile Include="Reguli.cpp" />
+    <ClCompile Include="Strategie.cpp" />
     <ClCompile Include="Salvare.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,5 +1,4 @@
 #pragma once
-#include "Pachet.h"
 #include "Lista.h"
 #pragma warning(disable:4996)
 
@@ -31,10 +30,12 @@ public:
 	int getScor();
 	void setScor(int a);
 
-	void Stand();
-	void Hit();
-	void Double(int a);
-	int Alegere();
+	// Primeste o carte (trasa din pachet de bucla de joc) si recalculeaza scorul.
+	void primeste(Carte c);
+
+	// Dubleaza miza curenta daca sunt bani suficienti. Intoarce true la succes.
+	bool dubleazaMiza();
+
 	void verifica_carti();
 
 	friend std::ostream& operator<<(std::ostream& out, const Jucator&);

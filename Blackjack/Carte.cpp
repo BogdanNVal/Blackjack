@@ -11,12 +11,12 @@ Carte::Carte(const Carte& a)
 	this->valoare = a.valoare;
 	this->simbol = a.simbol;
 }
-int Carte::getValoare()
+int Carte::getValoare() const
 {
 	return valoare;
 }
 
-int Carte::getSimbol()
+int Carte::getSimbol() const
 {
 	return simbol;
 }
