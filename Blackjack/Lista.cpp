@@ -90,6 +90,9 @@ std::ostream& operator<<(std::ostream& out, const Lista& list) {
 }
 
 Lista& Lista::operator=(const Lista& list) {
+	if (this == &list)
+		return *this;
+
 	clear();
 	Nod* p = list.primul;
 	while (p) {

@@ -52,6 +52,7 @@ if(BLACKJACK_BUILD_TESTS)
         tests/test_pachet.cpp
         tests/test_reguli.cpp
         tests/test_strategie.cpp
+        tests/test_lista.cpp
     )
     target_link_libraries(blackjack_tests PRIVATE blackjack_core Catch2::Catch2WithMain)
 

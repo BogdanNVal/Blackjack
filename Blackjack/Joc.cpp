@@ -8,6 +8,7 @@
 #include <thread>
 #include <chrono>
 #include <functional>
+#include <limits>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -37,10 +38,21 @@ static void stergeEcran()
 #endif
 }
 
-// Consume the rest of the line; return immediately on EOF so scripted runs do not hang.
+// Discard the leftover newline (and anything else) after `cin >> ...`
+// so a following getline actually waits for the user.
+static void ignoraRestulLiniei()
+{
+	if (!cin)
+		return;
+	cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+// Wait for Enter; return immediately on EOF so scripted runs do not hang.
 static void asteaptaEnter()
 {
 	cout << "Apasa Enter pentru a continua...";
+	cout.flush();
+	cin.clear();
 	string linie;
 	std::getline(cin, linie);
 }
@@ -129,6 +141,7 @@ static int citesteAlegere(bool permiteDouble)
 	int nr;
 	while (cin >> nr)
 	{
+		ignoraRestulLiniei();
 		if (nr == 1 || nr == 2 || (nr == 3 && permiteDouble))
 			return nr;
 		if (permiteDouble)
@@ -206,6 +219,7 @@ void meniuPrincipal()
 		cout << "[3] Iesire\n";
 		cout << "Alegere: ";
 		if (!(cin >> alegere)) return;
+		ignoraRestulLiniei();
 	} while (alegere != 1 && alegere != 2 && alegere != 3);
 
 	stergeEcran();
@@ -215,6 +229,7 @@ void meniuPrincipal()
 		char nume[50];
 		cout << "Nume jucator nou: ";
 		if (!(cin >> setw(50) >> nume)) return;
+		ignoraRestulLiniei();
 
 		Jucator jucator(nume);
 		stergeEcran();
@@ -235,6 +250,7 @@ void meniuPrincipal()
 		char nume[50];
 		cout << "\nNume jucator: ";
 		if (!(cin >> setw(50) >> nume)) return;
+		ignoraRestulLiniei();
 
 		Jucator jucator;
 		if (incarcaJucator(nume, jucator))
@@ -278,6 +294,7 @@ void ruleazaJoc(Jucator& jucator)
 		cout << "Mai joci o runda? [1] Da, [2] Nu: ";
 		int r;
 		if (!(cin >> r)) break;
+		ignoraRestulLiniei();
 		continua = (r == 1);
 		stergeEcran();
 	}
@@ -296,10 +313,12 @@ void start(Jucator& jucator, Pachet& pachet, Jucator& dealer)
 	cout << "Ce suma doriti sa pariati: ";
 	int s;
 	if (!(cin >> s)) return;
+	ignoraRestulLiniei();
 	while (s <= 0 || s > jucator.getBanii())
 	{
 		cout << "Suma invalida. Alege alta suma: ";
 		if (!(cin >> s)) return;
+		ignoraRestulLiniei();
 	}
 	jucator.Bet(s);
 	stergeEcran();
@@ -423,15 +442,14 @@ void verificare(Jucator& jucator, Pachet& pachet, Jucator& dealer)
 {
 	if (jucator.getScor() > 21)
 	{
-		afiseazaColorat("Bust\n", CULOARE_ROSU);
 		runda_dealer(jucator, pachet, dealer);
 	}
-	if (jucator.getScor() == 21)
+	else if (jucator.getScor() == 21)
 	{
 		afiseazaColorat("21!\n", CULOARE_VERDE);
 		runda_dealer(jucator, pachet, dealer);
 	}
-	if (jucator.getScor() < 21)
+	else
 	{
 		runda(jucator, pachet, dealer);
 	}
