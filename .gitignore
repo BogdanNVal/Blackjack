@@ -1,0 +1,23 @@
+# Build output
+/build/
+/out/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# Visual Studio
+.vs/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.user
+*.obj
+*.exe
+*.pdb
+*.ilk
+
+# Runtime save file
+jucatori.txt
