@@ -19,18 +19,13 @@ using std::string;
 Jucator dealer("Dealer", 0);
 
 static const int LATIME_MANA = 45;
-static const int PAUZA_CARTE_MS = 600;   // pauza intre cartile date, pt. efect de "animatie"
+static const int PAUZA_CARTE_MS = 600;
 
-// Opreste executia pentru un scurt timp, ca sa dea senzatia ca dealerul
-// (sau jucatorul) trage cartile una cate una, nu toate deodata.
 static void asteapta(int ms)
 {
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
-// --- Culori consola (Windows) ---------------------------------------------
-// Pe alte sisteme (ex. testare pe Linux), functiile nu fac nimic vizibil,
-// dar codul tot compileaza si ruleaza normal.
 #ifdef _WIN32
 static const int CULOARE_IMPLICITA = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
 static const int CULOARE_ROSU = FOREGROUND_RED | FOREGROUND_INTENSITY;
@@ -51,7 +46,6 @@ static void culoare(int cod)
 #endif
 }
 
-// Afiseaza un mesaj intr-o culoare, apoi revine la culoarea implicita.
 static void afiseazaColorat(const string& text, int cod)
 {
 	culoare(cod);
@@ -59,7 +53,6 @@ static void afiseazaColorat(const string& text, int cod)
 	culoare(CULOARE_IMPLICITA);
 }
 
-// O carte rosie (Inima/Diamant) se afiseaza cu rosu, restul cu culoarea implicita.
 static void afiseazaCarteColorata(Carte c)
 {
 	bool rosu = (c.getSimbol() == 1 || c.getSimbol() == 3);
@@ -68,7 +61,6 @@ static void afiseazaCarteColorata(Carte c)
 	culoare(CULOARE_IMPLICITA);
 }
 
-// Afiseaza toate cartile dintr-o mana, fiecare in culoarea ei.
 static void afiseazaManaColorata(Lista& carti)
 {
 	Nod* p = carti.getFirst();
@@ -78,9 +70,7 @@ static void afiseazaManaColorata(Lista& carti)
 		p = p->getNext();
 	}
 }
-// ----------------------------------------------------------------------------
 
-// Reda o mana (Lista de carti) ca string, ca sa poata fi aliniata pe ecran.
 static string cartiToString(Lista& carti)
 {
 	std::ostringstream oss;
@@ -88,8 +78,6 @@ static string cartiToString(Lista& carti)
 	return oss.str();
 }
 
-// Valoarea de Blackjack a unei singure carti vizibile (asul conteaza 11
-// cand e singura carte cunoscuta, fara riscul de a depasi 21).
 static int scorCartePartiala(Carte c)
 {
 	int v = c.getValoare();
@@ -98,23 +86,16 @@ static int scorCartePartiala(Carte c)
 	return v;
 }
 
-// Numara caracterele dintr-un string UTF-8 (nu octetii), ca sa ramana
-// corecta alinierea pe coloane cand textul contine simboluri Unicode
-// (trefla/inima/pica/romb), care ocupa mai multi octeti dar un singur
-// caracter afisat pe ecran.
+// Count Unicode characters, not bytes — suit symbols are multi-byte UTF-8.
 static int lungimeUtf8(const string& s)
 {
 	int n = 0;
 	for (unsigned char c : s)
-		if ((c & 0xC0) != 0x80) // sare peste octetii de continuare UTF-8
+		if ((c & 0xC0) != 0x80)
 			n++;
 	return n;
 }
 
-// Afiseaza o mana (eticheta + carti colorate) cu scorul aliniat in partea
-// dreapta. 'textPtruLungime' e versiunea simpla (necolorata) a cartilor,
-// folosita doar ca sa se calculeze corect padding-ul; 'printCarti' e ce
-// se afiseaza efectiv (poate fi colorat).
 static void afiseazaMana(const string& eticheta, const string& textPtruLungime,
 	const std::function<void()>& printCarti, const string& scor)
 {
@@ -128,11 +109,6 @@ static void afiseazaMana(const string& eticheta, const string& textPtruLungime,
 	cout << "Scor: " << scor << endl;
 }
 
-// Afiseaza banii jucatorului si ambele maini (jucator + dealer).
-// Daca dealerVizibilComplet e false, a doua carte a dealerului ramane
-// ascunsa si se arata doar scorul partial calculat din cartea vizibila.
-// Functioneaza corect si in timpul animatiei de impartire, cand dealerul
-// inca nu are nicio carte sau are doar prima.
 static void afiseazaStare(Jucator& jucator, bool dealerVizibilComplet)
 {
 	cout << "Banii: " << jucator.getBanii() << endl << endl;
@@ -151,12 +127,10 @@ static void afiseazaStare(Jucator& jucator, bool dealerVizibilComplet)
 	}
 	else if (!p)
 	{
-		// dealerul inca nu a primit nicio carte (animatie de impartire in curs)
 		afiseazaMana("Dealer: ", "", []() {}, "-");
 	}
 	else if (!p->getNext())
 	{
-		// dealerul are doar prima carte (vizibila); a doua nu a fost inca data
 		std::ostringstream carti;
 		carti << p->getInfo();
 		Carte prima = p->getInfo();
@@ -233,7 +207,6 @@ void meniuPrincipal()
 			meniuPrincipal();
 		}
 	}
-	// alegere == 3: iesire, main() se termina
 }
 
 void ruleazaJoc(Jucator& jucator)
@@ -286,8 +259,6 @@ void start(Jucator& jucator)
 	jucator.Bet(s);
 	system("CLS");
 
-	// Se trag cartile pe rand (jucator, dealer, jucator, dealer), cu o mica
-	// pauza dupa fiecare, ca sa para ca sunt date una cate una, nu instant.
 	jucator.getCarti().addElement(trage_carte());
 	jucator.verifica_carti();
 	system("CLS");
@@ -336,7 +307,6 @@ void runda_dealer(Jucator& jucator)
 		return;
 	}
 
-	// Dealerul isi arata mai intai cartea ascunsa, cu o pauza scurta
 	system("CLS");
 	afiseazaStare(jucator, true);
 	asteapta(PAUZA_CARTE_MS);

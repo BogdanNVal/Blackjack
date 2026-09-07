@@ -12,8 +12,6 @@ using std::ofstream;
 
 static const char* FISIER_SALVARE = "jucatori.txt";
 
-// Citeste toti jucatorii salvati intr-un map <nume, banii>.
-// Daca fisierul nu exista inca (primul joc), intoarce pur si simplu un map gol.
 static map<string, int> citesteToti()
 {
 	map<string, int> jucatori;

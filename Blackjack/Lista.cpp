@@ -26,7 +26,6 @@ void Nod::setNext(Nod* next) {
 }
 
 
-/*clasa ListaStudenti*/
 Lista::Lista() {
 	primul = 0;
 }
@@ -99,4 +98,3 @@ Lista& Lista::operator=(const Lista& list) {
 	}
 	return *this;
 }
-

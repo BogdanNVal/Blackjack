@@ -47,15 +47,11 @@ std::ostream& operator<<(std::ostream& out, const Carte& carte)
 	else if (carte.valoare == 13) out << "K" << " ";
 	else out << carte.valoare << " ";
 
-	// Simbolurile grafice ale cartilor (Trefla, Inima, Pica, Romb) sunt
-	// caractere Unicode reale, scrise ca octeti UTF-8 (\xE2\x99\x..) ca sa
-	// nu depinda de encoding-ul fisierului sursa. Merg corect in orice
-	// consola (cmd clasic, Windows Terminal), indiferent de fontul folosit,
-	// atata timp cat codepagina de iesire e setata pe UTF-8 (vezi Source.cpp).
-	if (carte.simbol == 0) out << "\xE2\x99\xA3";   // Trefla  (U+2663)
-	if (carte.simbol == 1) out << "\xE2\x99\xA5";   // Inima   (U+2665)
-	if (carte.simbol == 2) out << "\xE2\x99\xA0";   // Pica    (U+2660)
-	if (carte.simbol == 3) out << "\xE2\x99\xA6";   // Romb    (U+2666)
+	// Suit symbols as raw UTF-8 bytes so they do not depend on the source file encoding.
+	if (carte.simbol == 0) out << "\xE2\x99\xA3";   // Clubs  (U+2663)
+	if (carte.simbol == 1) out << "\xE2\x99\xA5";   // Hearts (U+2665)
+	if (carte.simbol == 2) out << "\xE2\x99\xA0";   // Spades (U+2660)
+	if (carte.simbol == 3) out << "\xE2\x99\xA6";   // Diamonds (U+2666)
 	out << "  ";
 
 	return out;

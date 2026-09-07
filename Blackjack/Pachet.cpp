@@ -27,12 +27,6 @@ void creare_pachet() {
 		}
 
 	}
-	//afisare_pachet();
-	//cout << endl;
-
-
-
-
 }
 
 
@@ -51,9 +45,6 @@ void amestecare_pachet()
 		Pachet[i] = Pachet[r];
 		Pachet[r] = temp;
 	}
-
-	//afisare_pachet();
-
 }
 
 
