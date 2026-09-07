@@ -30,10 +30,7 @@ public:
 	int getScor();
 	void setScor(int a);
 
-	// Primeste o carte (trasa din pachet de bucla de joc) si recalculeaza scorul.
 	void primeste(Carte c);
-
-	// Dubleaza miza curenta daca sunt bani suficienti. Intoarce true la succes.
 	bool dubleazaMiza();
 
 	void verifica_carti();

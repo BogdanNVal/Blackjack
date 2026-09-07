@@ -21,9 +21,7 @@ void Pachet::creeaza()
 
 void Pachet::amesteca()
 {
-	// Un singur generator, semanat o data din random_device: doua rulari
-	// pornite in aceeasi secunda nu vor produce acelasi amestec (spre
-	// deosebire de rand()/srand(time(0))).
+	// Seed once from random_device so two starts in the same second get different shuffles.
 	static std::random_device rd;
 	static std::mt19937 gen(rd());
 

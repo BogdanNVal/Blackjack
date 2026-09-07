@@ -5,15 +5,12 @@
 #include "Carte.h"
 #include "Strategie.h"
 
-// Carti de dealer folosite ca upcard (simbolul e irelevant pentru strategie).
 static Carte dealer(int valoare) { return Carte(valoare, 0); }
 
 TEST_CASE("Hard 11 dubleaza contra oricarei carti mici", "[strategie]")
 {
 	REQUIRE(sfatBaza(11, false, dealer(6), true) == Actiune::Double);
-	// ...dar doar daca dublarea e permisa
 	REQUIRE(sfatBaza(11, false, dealer(6), false) == Actiune::Hit);
-	// contra asului (upcard 11) se cere carte
 	REQUIRE(sfatBaza(11, false, dealer(1), true) == Actiune::Hit);
 }
 

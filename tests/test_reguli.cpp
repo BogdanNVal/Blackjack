@@ -14,7 +14,7 @@ static Lista manaReguli(std::initializer_list<int> valori)
 
 TEST_CASE("valoareBlackjack: as = 1, figuri = 10, restul nominal", "[reguli]")
 {
-	REQUIRE(valoareBlackjack(Carte(1, 0)) == 1);   // As
+	REQUIRE(valoareBlackjack(Carte(1, 0)) == 1);   // Ace
 	REQUIRE(valoareBlackjack(Carte(7, 0)) == 7);
 	REQUIRE(valoareBlackjack(Carte(11, 0)) == 10); // J
 	REQUIRE(valoareBlackjack(Carte(13, 0)) == 10); // K
@@ -39,14 +39,14 @@ TEST_CASE("determinaRezultat acopera toate cazurile", "[reguli]")
 
 TEST_CASE("Bust-ul jucatorului are prioritate fata de bust-ul dealerului", "[reguli]")
 {
-	// Daca ambii au depasit 21, jucatorul pierde (a "spart" primul).
+	// If both bust, the player loses (they busted first).
 	REQUIRE(determinaRezultat(22, 25) == Rezultat::JucatorBust);
 }
 
 TEST_CASE("esteBlackjackNatural: doar 21 din exact doua carti", "[reguli]")
 {
 	Lista natural = manaReguli({ 1, 13 });       // A + K = 21 (natural)
-	Lista douazecisiunuDinTrei = manaReguli({ 7, 7, 7 }); // 21 din trei carti
+	Lista douazecisiunuDinTrei = manaReguli({ 7, 7, 7 }); // 21 from three cards
 	Lista douazeci = manaReguli({ 13, 12 });     // K + Q = 20
 	Lista asDublu = manaReguli({ 1, 1 });        // A + A = 12
 

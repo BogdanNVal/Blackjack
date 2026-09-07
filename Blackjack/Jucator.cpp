@@ -129,8 +129,6 @@ bool Jucator::dubleazaMiza()
 
 void Jucator::verifica_carti()
 {
-	// Logica de scor traieste acum in Reguli (o singura sursa de adevar,
-	// testata unitar).
 	scor = calculeazaScor(carti);
 }
 

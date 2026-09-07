@@ -3,13 +3,13 @@
 
 
 class Nod {
-	Carte info; //informatia
-	Nod* next;//legatura catre urmatorul nod din lista
+	Carte info;
+	Nod* next;
 public:
-	Nod();//Constructor Implicit
-	Nod(Carte info, Nod* next = 0);//Constructor de initializare
+	Nod();
+	Nod(Carte info, Nod* next = 0);
 	~Nod();
-	Carte getInfo();//
+	Carte getInfo();
 	void setInfo(Carte info);
 	Nod* getNext();
 	void setNext(Nod* next);
@@ -23,13 +23,13 @@ class Lista{
 protected:
 	Nod* primul;
 public:
-	Lista(); //constructor implicit
+	Lista();
 	Lista(const Lista&);
-	~Lista(); //destructor
+	~Lista();
 	int isEmpty();
 	void clear();
-	void addElement(Carte info);//adauga un nod la sfarsitul listei
-	Nod* getFirst();//intoarce primul elemnt din lista
+	void addElement(Carte info);
+	Nod* getFirst();
 
 	friend std::ostream& operator<<(std::ostream&, const Lista&);
 	Lista& operator=(const Lista& list);

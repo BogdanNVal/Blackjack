@@ -23,7 +23,7 @@ TEST_CASE("Un pachet nou are 52 de carti unice", "[pachet]")
 	}
 
 	REQUIRE(trase == 52);
-	REQUIRE(vazute.size() == 52); // toate distincte (4 simboluri x 13 valori)
+	REQUIRE(vazute.size() == 52); // all distinct (4 suits x 13 ranks)
 }
 
 TEST_CASE("Pachetul gol arunca la tragere", "[pachet]")

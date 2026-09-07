@@ -12,7 +12,6 @@ const char* numeActiune(Actiune a)
 	return "?";
 }
 
-// Puterea cartii vizibile a dealerului, pe scala 2..11 (asul = 11).
 static int upcardDealer(Carte cartaDealer)
 {
 	int v = valoareBlackjack(cartaDealer);
@@ -21,23 +20,22 @@ static int upcardDealer(Carte cartaDealer)
 
 static Actiune strategieSoft(int scor, int up, bool poateDubla)
 {
-	// Maini soft (contin un as numarat ca 11).
-	if (scor >= 19) return Actiune::Stand;                 // soft 19-21
+	if (scor >= 19) return Actiune::Stand;
 
-	if (scor == 18)                                        // A,7
+	if (scor == 18)
 	{
-		if (up >= 9) return Actiune::Hit;                 // vs 9, 10, A
+		if (up >= 9) return Actiune::Hit;
 		if (poateDubla && up >= 3 && up <= 6) return Actiune::Double;
-		return Actiune::Stand;                            // vs 2, 7, 8
+		return Actiune::Stand;
 	}
 
-	if (scor == 17)                                        // A,6
+	if (scor == 17)
 		return (poateDubla && up >= 3 && up <= 6) ? Actiune::Double : Actiune::Hit;
 
-	if (scor == 15 || scor == 16)                         // A,4 / A,5
+	if (scor == 15 || scor == 16)
 		return (poateDubla && up >= 4 && up <= 6) ? Actiune::Double : Actiune::Hit;
 
-	if (scor == 13 || scor == 14)                         // A,2 / A,3
+	if (scor == 13 || scor == 14)
 		return (poateDubla && up >= 5 && up <= 6) ? Actiune::Double : Actiune::Hit;
 
 	return Actiune::Hit;
@@ -62,7 +60,7 @@ static Actiune strategieHard(int scor, int up, bool poateDubla)
 	if (scor == 9)
 		return (poateDubla && up >= 3 && up <= 6) ? Actiune::Double : Actiune::Hit;
 
-	return Actiune::Hit;   // 8 sau mai putin
+	return Actiune::Hit;
 }
 
 Actiune sfatBaza(int scorJucator, bool esteSoft, Carte cartaDealer, bool poateDubla)

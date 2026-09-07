@@ -3,14 +3,14 @@
 int valoareBlackjack(const Carte& c)
 {
 	int v = c.getValoare();
-	if (v == 1) return 1;      // as: promovat la 11 in calculeazaScor
-	if (v > 10) return 10;     // J, Q, K
+	if (v == 1) return 1;
+	if (v > 10) return 10;
 	return v;
 }
 
 int calculeazaScor(Lista& mana)
 {
-	int s = 0;   // suma cartilor non-as (plus asii numarati ca 1 la final)
+	int s = 0;
 	int asi = 0;
 
 	for (Nod* p = mana.getFirst(); p; p = p->getNext())
@@ -22,7 +22,6 @@ int calculeazaScor(Lista& mana)
 			s += valoareBlackjack(c);
 	}
 
-	// Fiecare as vrea sa conteze 11 daca incape, altfel 1.
 	while (asi != 0)
 	{
 		if (s + 11 <= 21)
@@ -32,7 +31,7 @@ int calculeazaScor(Lista& mana)
 		}
 		else
 		{
-			s += asi; // restul asilor conteaza 1 fiecare
+			s += asi;
 			asi = 0;
 		}
 	}
@@ -54,7 +53,6 @@ bool esteManaSoft(Lista& mana)
 			s += valoareBlackjack(c);
 	}
 
-	// Mana e soft daca exista cel putin un as care poate conta 11 fara bust.
 	return asi > 0 && (s + asi - 1 + 11 <= 21);
 }
 

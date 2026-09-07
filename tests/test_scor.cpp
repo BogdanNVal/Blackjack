@@ -4,7 +4,6 @@
 #include "Lista.h"
 #include "Reguli.h"
 
-// Helper: construieste o mana din valori de carti (simbolul nu conteaza la scor).
 static Lista mana(std::initializer_list<int> valori)
 {
 	Lista l;
@@ -53,7 +52,7 @@ TEST_CASE("esteManaSoft detecteaza asul numarat ca 11", "[scor]")
 {
 	Lista soft = mana({ 1, 6 }); // A,6 = soft 17
 	Lista hard = mana({ 10, 6 }); // 16 hard
-	Lista degradat = mana({ 1, 9, 13 }); // asul devine 1 -> hard 20
+	Lista degradat = mana({ 1, 9, 13 }); // ace counts as 1 -> hard 20
 
 	REQUIRE(esteManaSoft(soft) == true);
 	REQUIRE(esteManaSoft(hard) == false);
