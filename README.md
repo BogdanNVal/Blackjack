@@ -1,6 +1,7 @@
 # Blackjack — Console Card Game (C++)
 
 [![CI](https://github.com/BogdanNVal/Blackjack/actions/workflows/ci.yml/badge.svg)](https://github.com/BogdanNVal/Blackjack/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A console-based Blackjack game written in C++, with custom classes for each
 game concept (card, deck, linked list for a hand, player) and simple player
@@ -12,6 +13,13 @@ built-in basic-strategy advisor). It builds and runs cross-platform (Linux,
 macOS, Windows) via CMake, and still opens as a Visual Studio 2022 solution
 on Windows.
 
+## Gameplay
+
+![A round being played, with the basic-strategy advisor](docs/screenshots/gameplay.gif)
+
+> Recorded on Linux (monochrome); on Windows the cards and result messages
+> are shown in color, as in the screenshots below.
+
 ## Screenshots
 
 ![Main menu](docs/screenshots/meniu.png)
@@ -22,10 +30,14 @@ on Windows.
 
 - **Main menu**: new player or continue with an already saved player.
 - **Standard Blackjack rules**: Hit, Stand, Double (double the bet + exactly
-  one additional card); aces count as 1 or 11, calculated automatically for
-  the optimal score; the dealer automatically draws while their score is
-  below 17.
-- **Correct outcome determination**: bust, natural blackjack (push), score
+  one additional card, offered only on the first two cards); aces count as 1
+  or 11, calculated automatically for the optimal score; the dealer
+  automatically draws while their score is below 17.
+- **Natural blackjack pays 3:2**: a 21 made from the first two cards is a
+  "natural" and pays 3:2, settled immediately. If the dealer also has a
+  natural it is a push; if only the dealer has one, the hand is lost right
+  away. A 21 reached from three or more cards is a normal 21, not a natural.
+- **Correct outcome determination**: bust, natural blackjack, score
   higher/equal/lower than the dealer's.
 - **Continue playing**: after each round you can keep playing with the same
   player, keeping your accumulated money, without restarting the application.
@@ -175,3 +187,7 @@ Blackjack/
 The `Lista` linked list and `Jucator`'s manual Rule-of-Three (below) are kept
 deliberately as data-structure and memory-management exercises rather than
 being replaced with `std::vector` / `std::string`.
+
+## License
+
+Released under the [MIT License](LICENSE).
