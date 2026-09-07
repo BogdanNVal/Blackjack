@@ -1,8 +1,16 @@
 # Blackjack — Console Card Game (C++)
 
+[![CI](https://github.com/BogdanNVal/Blackjack/actions/workflows/ci.yml/badge.svg)](https://github.com/BogdanNVal/Blackjack/actions/workflows/ci.yml)
+
 A console-based Blackjack game written in C++, with custom classes for each
 game concept (card, deck, linked list for a hand, player) and simple player
 persistence between sessions.
+
+The game logic lives in a small, unit-tested core library that is completely
+free of console I/O, so it can be tested and reused (for example by the
+built-in basic-strategy advisor). It builds and runs cross-platform (Linux,
+macOS, Windows) via CMake, and still opens as a Visual Studio 2022 solution
+on Windows.
 
 ## Screenshots
 
@@ -32,12 +40,24 @@ persistence between sessions.
   tie).
 - **Graphical card symbols**: Clubs/Hearts/Spades/Diamonds are displayed as
   Unicode symbols (♣ ♥ ♠ ♦), not as letters (C/H/S/D).
+- **Basic-strategy advisor**: before each decision the game prints the
+  action recommended by Blackjack basic strategy (Hit / Stand / Double),
+  computed from your total, whether the hand is soft, and the dealer's
+  upcard.
+- **Unit-tested core + CI**: the game rules (scoring, ace logic, deck,
+  outcome, strategy) are covered by a Catch2 test suite, run on every push
+  via GitHub Actions on Linux and Windows.
 
 ## Tech stack
 
-- C++17, no external dependencies — standard library only
+- C++17, standard library only for the game itself
   (`<iostream>`, `<fstream>`, `<random>`, `<thread>`, `<chrono>`, `<map>`)
-- Visual Studio 2022 project (`.sln` / `.vcxproj`), x64/Win32 platform
+- CMake build (cross-platform) producing a `blackjack_core` static library,
+  the `blackjack` executable, and a `blackjack_tests` test binary
+- [Catch2 v3](https://github.com/catchorg/Catch2) for unit tests (fetched
+  automatically by CMake; only needed when building tests)
+- GitHub Actions CI (Ubuntu + Windows): configure, build, run `ctest`
+- Also opens as a Visual Studio 2022 project (`.sln` / `.vcxproj`) on Windows
 - Custom classes for each concept: `Carte` (Card), `Lista` (List — a hand-
   written linked list used for each player's hand), `Pachet` (Deck),
   `Jucator` (Player)
@@ -47,7 +67,28 @@ persistence between sessions.
 - Pauses between cards: `std::this_thread::sleep_for`
 - Console colors: Windows Console API (`SetConsoleTextAttribute`)
 
-## Running locally
+## Building and running (CMake, any platform)
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+./build/blackjack           # blackjack.exe on Windows
+```
+
+Run the unit tests:
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+To build only the game (skip fetching Catch2), pass
+`-DBLACKJACK_BUILD_TESTS=OFF` at configure time.
+
+> Note: on some Linux setups the default `c++` compiler is Clang without a
+> working `libstdc++` link. If configuration fails to compile a test program,
+> add `-DCMAKE_CXX_COMPILER=g++`.
+
+## Running on Windows (Visual Studio)
 
 1. Open `Blackjack.sln` in Visual Studio 2022.
 2. If a build error related to the **v143** toolset appears, install the
@@ -59,6 +100,23 @@ persistence between sessions.
 The save file `jucatori.txt` is created automatically, next to the
 executable, the first time a player is saved — it doesn't need to be
 created manually.
+
+## Architecture
+
+The code is split so that the game rules never depend on console I/O:
+
+- `blackjack_core` (library, no I/O): `Carte`, `Lista`, `Pachet`, `Jucator`,
+  `Reguli` (scoring / outcome / dealer rule), `Strategie` (basic-strategy
+  advisor), `Salvare` (persistence). This layer is what the unit tests link
+  against.
+- Console layer: `Joc` (rendering, menus, the game loop) and `Source`
+  (`main`). Screen clearing and "press Enter" pauses are portable helpers
+  (ANSI escapes on POSIX, the Windows console on `_WIN32`) instead of
+  `system("cls")` / `system("pause")`.
+
+There is no global mutable state: the deck (`Pachet`) and the dealer
+(`Jucator`) are owned by the game loop and passed explicitly to the round
+functions.
 
 ## Technical decisions worth noting
 
@@ -93,14 +151,27 @@ created manually.
 
 ```
 Blackjack/
+  CMakeLists.txt                -> cross-platform build (core lib + game + tests)
   Blackjack.sln                 -> Visual Studio solution
+  .github/workflows/ci.yml      -> CI: build + ctest on Linux and Windows
   Blackjack/
     Source.cpp                  -> main() -> meniuPrincipal()
-    Joc.h / Joc.cpp              -> menu, game loop, round rules
-    Jucator.h / Jucator.cpp      -> Jucator class (money, hand, score, actions)
+    Joc.h / Joc.cpp              -> menu, game loop, rendering (console layer)
+    Jucator.h / Jucator.cpp      -> Jucator class (money, hand, score)
     Carte.h / Carte.cpp          -> Carte class (value + symbol)
     Lista.h / Lista.cpp          -> linked list, used for the hand
-    Pachet.h / Pachet.cpp        -> the 52-card deck + shuffling
+    Pachet.h / Pachet.cpp        -> the 52-card deck + shuffling (a class)
+    Reguli.h / Reguli.cpp        -> pure rules: scoring, ace logic, outcome
+    Strategie.h / Strategie.cpp  -> basic-strategy advisor
     Salvare.h / Salvare.cpp      -> player save/load (jucatori.txt)
     Blackjack.vcxproj(.filters) -> Visual Studio project configuration
+  tests/
+    test_scor.cpp                -> scoring / ace logic
+    test_pachet.cpp              -> deck (52 unique cards, draw, empty)
+    test_reguli.cpp              -> outcomes + dealer-draw rule
+    test_strategie.cpp           -> basic-strategy cells
 ```
+
+The `Lista` linked list and `Jucator`'s manual Rule-of-Three (below) are kept
+deliberately as data-structure and memory-management exercises rather than
+being replaced with `std::vector` / `std::string`.
